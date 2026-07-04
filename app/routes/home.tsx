@@ -1,16 +1,71 @@
 import type { Route } from "./+types/home";
 import Navbar from "../../components/Navbar";
-import { ArrowRight, ArrowUpRight, Clock, Layers, Upload } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Clock, Layers, Upload as UploadIcon } from "lucide-react";
 import Button from "../../components/ui/Button";
+import Upload from "../../components/Upload";
+import { useEffect, useState } from "react";
+import puter from "@heyputer/puter.js";
+import { useNavigate } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Sketch2Space - AI Floor Plan Designer" },
+    { name: "description", content: "Build beautiful spaces at the speed of thought with Sketch2Space" },
   ];
 }
 
+interface Project {
+  id: string;
+  name: string;
+  sourceImage: string;
+  renderedImage?: string;
+  timestamp: number;
+}
+
 export default function Home() {
+  const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+    const handleUploadComplete = async (base64Image: string) => {
+            const newId = Date.now().toString();
+             navigate(`visualizer/${newId}`);
+             return true;
+      
+
+    }
+
+  const loadProjects = async () => {
+    setLoadingProjects(true);
+    try {
+      let data: string | null = null;
+      if (puter.auth.isSignedIn()) {
+        data = (await puter.kv.get("sketch2space_projects")) ?? null;
+      } else {
+        data = localStorage.getItem("sketch2space_projects");
+      }
+
+      if (data) {
+        setProjects(JSON.parse(data));
+      } else {
+        setProjects([]);
+      }
+    } catch (e) {
+      console.error("Failed to load projects", e);
+      try {
+        const data = localStorage.getItem("sketch2space_projects");
+        if (data) setProjects(JSON.parse(data));
+      } catch {}
+    } finally {
+      setLoadingProjects(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+
   return (
     <div className="home">
       <Navbar />
@@ -50,8 +105,8 @@ export default function Home() {
               <p>Supports JPG, PNG, formats up to 10MB</p>
             </div>
 
-            {/* <Upload onComplete={handleUploadComplete} /> */}
-            <Button className="cta">Upload Image</Button>
+            <Upload onComplete={handleUploadComplete}/>
+              
           </div>
         </div>
       </section>
@@ -65,6 +120,7 @@ export default function Home() {
           </div>
 
           <div className="projects-grid">
+            {/* Always show the default community project */}
             <div className="project-card group">
               <div className="preview">
                 <img src="https://roomify-mlhuk267-dfwu1i.puter.site/projects/1770803585402/rendered.png" alt="Project" />
@@ -85,39 +141,44 @@ export default function Home() {
                 <div className="arrow">
                   <ArrowUpRight size={18} />
                 </div>
-
               </div>
             </div>
-            {/* {projects.map(({id, name, renderedImage, sourceImage, timestamp}) => (
-                          <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
-                              <div className="preview">
-                                  <img  src={renderedImage || sourceImage} alt="Project"
-                                  />
 
-                                  <div className="badge">
-                                      <span>Community</span>
-                                  </div>
-                              </div>
+            {/* Render loading state or user projects */}
+            {loadingProjects ? (
+              <div className="empty">Loading your projects...</div>
+            ) : (
+              projects.map(({ id, name, renderedImage, sourceImage, timestamp }) => (
+                <div key={id} className="project-card group">
+                  <div className="preview">
+                    <img src={renderedImage || sourceImage} alt={name} />
 
-                              <div className="card-body">
-                                  <div>
-                                      <h3>{name}</h3>
+                    <div className="badge">
+                      <span>{renderedImage ? "Rendered" : "Original"}</span>
+                    </div>
+                  </div>
 
-                                      <div className="meta">
-                                          <Clock size={12} />
-                                          <span>{new Date(timestamp).toLocaleDateString()}</span>
-                                          <span>By JS Mastery</span>
-                                      </div>
-                                  </div>
-                                  <div className="arrow">
-                                      <ArrowUpRight size={18} />
-                                  </div>
-                              </div>
-                          </div>
-                      ))} */}
+                  <div className="card-body">
+                    <div>
+                      <h3>{name}</h3>
+
+                      <div className="meta">
+                        <Clock size={12} />
+                        <span>{new Date(timestamp).toLocaleDateString()}</span>
+                        <span>By You</span>
+                      </div>
+                    </div>
+                    <div className="arrow">
+                      <ArrowUpRight size={18} />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
     </div>
   )
 }
+

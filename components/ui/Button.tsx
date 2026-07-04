@@ -1,19 +1,19 @@
-import React from 'react';
+import { type ButtonHTMLAttributes } from 'react';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+const Button = ({
   variant = 'primary',
   size = 'md',
   fullWidth = false,
   className = '',
   children,
   ...props
-}) => {
+}: ButtonProps) => {
   const baseClass = 'btn';
   const variantClass = `btn--${variant}`;
   const sizeClass = `btn--${size}`;
@@ -25,9 +25,7 @@ export const Button: React.FC<ButtonProps> = ({
     sizeClass,
     fullWidthClass,
     className
-  ]
-    .filter(Boolean)
-    .join(' ');
+  ].filter(Boolean).join(' ');
 
   return (
     <button className={combinedClasses} {...props}>
