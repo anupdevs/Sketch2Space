@@ -9,7 +9,7 @@ import {ReactCompareSlider, ReactCompareSliderImage} from "react-compare-slider"
 const VisualizerId = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { userId } = useOutletContext<AuthContext>()
+    const { userId, userName } = useOutletContext<AuthContext>();
 
     const hasInitialGenerated = useRef(false);
 
@@ -47,6 +47,7 @@ const VisualizerId = () => {
                     renderedPath: result.renderedPath,
                     timestamp: Date.now(),
                     ownerId: item.ownerId ?? userId ?? null,
+                    sharedBy: item.sharedBy ?? userName ?? "Anonymous",
                     isPublic: item.isPublic ?? false,
                 }
 
@@ -129,7 +130,11 @@ const VisualizerId = () => {
                         <div className="panel-meta">
                             <p>Project</p>
                             <h2>{project?.name || `Residence ${id}`}</h2>
-                            <p className="note">Created by You</p>
+                            <p className="note">
+                                {project?.ownerId && project.ownerId === userId
+                                    ? "Created by You"
+                                    : `Created by ${project?.sharedBy || "Anonymous"}`}
+                            </p>
                         </div>
 
                         <div className="panel-actions">
@@ -190,7 +195,7 @@ const VisualizerId = () => {
                                     <ReactCompareSliderImage src={project?.sourceImage} alt="before" className="compare-img" />
                                 }
                                 itemTwo={
-                                    <ReactCompareSliderImage src={currentImage || project?.renderedImage} alt="after" className="compare-img" />
+                                    <ReactCompareSliderImage src={currentImage || project?.renderedImage || undefined} alt="after" className="compare-img" />
                                 }
                             />
                         ) : (

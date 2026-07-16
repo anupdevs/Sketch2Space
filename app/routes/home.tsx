@@ -3,7 +3,7 @@ import Navbar from "../../components/Navbar";
 import {ArrowRight, ArrowUpRight, Clock, Layers} from "lucide-react";
 import Button from "../../components/ui/Button";
 import Upload from "../../components/Upload";
-import {useNavigate} from "react-router";
+import {useNavigate, useOutletContext} from "react-router";
 import {useEffect, useRef, useState} from "react";
 import {createProject, getProjects} from "../../lib/puter.action";
 
@@ -16,6 +16,7 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
     const navigate = useNavigate();
+    const { userId, userName, isSignedIn } = useOutletContext<AuthContext>();
     const [projects, setProjects] = useState<DesignItem[]>([]);
     const isCreatingProjectRef = useRef(false);
 
@@ -30,7 +31,9 @@ export default function Home() {
             const newItem = {
                 id: newId, name, sourceImage: base64Image,
                 renderedImage: undefined,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                ownerId: userId || null,
+                sharedBy: userName || (isSignedIn ? "Logged In User" : "Anonymous"),
             }
 
             const saved = await createProject({ item: newItem, visibility: 'private' });
@@ -59,8 +62,8 @@ export default function Home() {
     useEffect(() => {
         const fetchProjects = async () => {
             const items = await getProjects();
-
-            setProjects(items)
+            const sortedItems = [...items].sort((a, b) => b.timestamp - a.timestamp);
+            setProjects(sortedItems);
         }
 
         fetchProjects();
@@ -123,14 +126,14 @@ export default function Home() {
                   </div>
 
                   <div className="projects-grid">
-                      {projects.map(({id, name, renderedImage, sourceImage, timestamp}) => (
+                      {projects.map(({id, name, renderedImage, sourceImage, timestamp, sharedBy, ownerId}) => (
                           <div key={id} className="project-card group" onClick={() => navigate(`/visualizer/${id}`)}>
                               <div className="preview">
                                   <img  src={renderedImage || sourceImage} alt="Project"
                                   />
 
                                   <div className="badge">
-                                      <span>Community</span>
+                                      <span>{ownerId && ownerId === userId ? "Your Project" : "Community"}</span>
                                   </div>
                               </div>
 
@@ -141,7 +144,7 @@ export default function Home() {
                                       <div className="meta">
                                           <Clock size={12} />
                                           <span>{new Date(timestamp).toLocaleDateString()}</span>
-                                          <span>By JS Mastery</span>
+                                          <span>By {ownerId && ownerId === userId ? "You" : (sharedBy || "Anonymous")}</span>
                                       </div>
                                   </div>
                                   <div className="arrow">
