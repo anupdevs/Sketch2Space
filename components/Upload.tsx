@@ -13,6 +13,7 @@ const Upload = ({ onComplete }: UploadProps) => {
     const [progress, setProgress] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isProcessingRef = useRef(false);
 
     const { isSignedIn } = useOutletContext<AuthContext>();
 
@@ -31,6 +32,8 @@ const Upload = ({ onComplete }: UploadProps) => {
 
     const processFile = useCallback((file: File) => {
         if (!isSignedIn) return;
+        if (isProcessingRef.current) return;
+        isProcessingRef.current = true;
 
         // Clean up any existing interval or timeout
         if (intervalRef.current) {
@@ -49,6 +52,7 @@ const Upload = ({ onComplete }: UploadProps) => {
         reader.onerror = () => {
             setFile(null);
             setProgress(0);
+            isProcessingRef.current = false;
         };
         reader.onload = () => {
             const base64Data = reader.result as string;
@@ -64,6 +68,7 @@ const Upload = ({ onComplete }: UploadProps) => {
                         timeoutRef.current = setTimeout(() => {
                             onComplete?.(base64Data);
                             timeoutRef.current = null;
+                            isProcessingRef.current = false;
                         }, REDIRECT_DELAY_MS);
                         return 100;
                     }
@@ -74,18 +79,22 @@ const Upload = ({ onComplete }: UploadProps) => {
         reader.readAsDataURL(file);
     }, [isSignedIn, onComplete]);
 
-    const handleDragOver = (e: React.DragEvent<HTMLInputElement | HTMLDivElement>) => {
+    const handleDragOver = (e: React.DragEvent<HTMLInputElement>) => {
         e.preventDefault();
+        e.stopPropagation();
         if (!isSignedIn) return;
         setIsDragging(true);
     };
 
-    const handleDragLeave = () => {
+    const handleDragLeave = (e: React.DragEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
         setIsDragging(false);
     };
 
-    const handleDrop = (e: React.DragEvent<HTMLInputElement | HTMLDivElement>) => {
+    const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
         e.preventDefault();
+        e.stopPropagation();
         setIsDragging(false);
 
         if (!isSignedIn) return;
@@ -98,7 +107,12 @@ const Upload = ({ onComplete }: UploadProps) => {
             const isAllowed = allowedTypes.includes(droppedFile.type) || allowedExtensions.includes(fileExtension);
             
             if (isAllowed) {
-                processFile(droppedFile);
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(droppedFile);
+                e.currentTarget.files = dataTransfer.files;
+                
+                const event = new Event('change', { bubbles: true });
+                e.currentTarget.dispatchEvent(event);
             }
         }
     };
@@ -109,18 +123,14 @@ const Upload = ({ onComplete }: UploadProps) => {
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
             processFile(selectedFile);
+            e.target.value = '';
         }
     };
 
     return (
         <div className="upload">
             {!file ? (
-                <div
-                    className={`dropzone ${isDragging ? 'is-dragging' : ''}`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                >
+                <div className={`dropzone ${isDragging ? 'is-dragging' : ''}`}>
                     <input
                         type="file"
                         className="drop-input"

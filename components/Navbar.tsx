@@ -1,5 +1,5 @@
-import {Box} from "lucide-react";
 import Button from "./ui/Button";
+import Logo from "./Logo";
 import {useOutletContext} from "react-router";
 
 const Navbar = () => {
@@ -28,10 +28,10 @@ const Navbar = () => {
             <nav className="inner">
                 <div className="left">
                     <div className="brand">
-                        <Box  className="logo" />
+                        <Logo className="logo" />
 
                         <span className="name">
-                            Roomify
+                            Sketch2Space
                         </span>
                     </div>
 
