@@ -5,6 +5,7 @@ import {Box, Download, RefreshCcw, Share2, X} from "lucide-react";
 import Button from "../../components/ui/Button";
 import {createProject, getProjectById} from "../../lib/puter.action";
 import {ReactCompareSlider, ReactCompareSliderImage} from "react-compare-slider";
+import Logo from "../../components/Logo";
 
 const VisualizerId = () => {
     const { id } = useParams();
@@ -115,9 +116,9 @@ const VisualizerId = () => {
         <div className="visualizer">
             <nav className="topbar">
                 <div className="brand">
-                    <Box className="logo" />
+                     <Logo className="logo" />
 
-                    <span className="name">Roomify</span>
+                    <span className="name">Sketch2Space</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleBack} className="exit">
                     <X className="icon" /> Exit Editor
