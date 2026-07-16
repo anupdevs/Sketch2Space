@@ -153,6 +153,50 @@
                 }
             }
         }
+
+        .mobile-menu {
+            @apply absolute top-16 left-0 w-full bg-background/95 backdrop-blur-md border-b border-black/5 flex flex-col p-6 shadow-xl z-40;
+            animation: navbarSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+            .mobile-links {
+                @apply flex flex-col space-y-4 mb-6;
+
+                a {
+                    @apply text-base font-medium text-zinc-600 hover:text-black transition-colors block py-1 border-b border-black/[0.02] last:border-b-0;
+                }
+            }
+
+            .mobile-actions {
+                @apply flex flex-col border-t border-black/5 pt-6;
+
+                .mobile-user-info {
+                    @apply flex flex-col space-y-3;
+
+                    .greeting {
+                        @apply text-xs font-semibold uppercase tracking-wide text-zinc-500 mb-1;
+                    }
+                }
+
+                .mobile-auth-buttons {
+                    @apply flex flex-col space-y-3;
+                    
+                    .cta {
+                        @apply inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2.5 text-sm uppercase tracking-wide bg-primary text-white hover:bg-[#EA580C] shadow-sm;
+                    }
+                }
+            }
+        }
+    }
+
+    @keyframes navbarSlideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .auth-modal {
